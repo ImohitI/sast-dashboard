@@ -1,0 +1,32 @@
+server:
+  port: 8082     # 8080 ingest-api, 8081 Kafka UI, 8090 Jenkins
+
+spring:
+  application:
+    name: dashboard-api
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sast
+    username: dashboard_ro       # read-only user created by sast-platform/postgres/init
+    password: dashboard_ro       # local POC only
+    hikari:
+      read-only: true
+      connection-timeout: 5000
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 500ms             # Redis down must cost ~0.5 s per request, not a 60 s hang
+      connect-timeout: 500ms
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+sast:
+  cache:
+    ttl: 60s

@@ -1,0 +1,96 @@
+<header>
+  <h1>SAST dashboard</h1>
+  <label>
+    Repo
+    <select [value]="repo() ?? ''" (change)="selectRepo($any($event.target).value)">
+      @for (r of repos(); track r) {
+        <option [value]="r">{{ r }}</option>
+      }
+    </select>
+  </label>
+</header>
+
+@if (error(); as message) {
+  <p class="error">{{ message }}</p>
+}
+
+@if (latest(); as build) {
+  <section class="card">
+    <h2>Latest build #{{ build.buildId }}</h2>
+    <p class="meta">
+      commit <code>{{ build.commitSha ?? 'n/a' }}</code> · scanned {{ build.scannedAt | date: 'medium' }} ·
+      {{ build.findingCount }} findings
+    </p>
+    <div class="counts">
+      @for (s of severities; track s) {
+        <span class="sev sev-{{ s.toLowerCase() }}">{{ s }} {{ build.countsBySeverity[s] ?? 0 }}</span>
+      }
+    </div>
+  </section>
+
+  @if (diff(); as d) {
+    <section class="card">
+      <h2>
+        Build #{{ d.buildId }} vs
+        <select [value]="d.baseBuildId ?? ''" (change)="onBaseChange($any($event.target).value)">
+          @for (b of builds(); track b.buildId) {
+            @if (b.buildId !== d.buildId) {
+              <option [value]="b.buildId">#{{ b.buildId }}</option>
+            }
+          }
+        </select>
+      </h2>
+      @if (d.baseBuildId === null) {
+        <p class="meta">First build of this repo: everything is new.</p>
+      }
+      <div class="diff">
+        <div>
+          <h3 class="new">New ({{ d.newFindings.length }})</h3>
+          <ul>
+            @for (f of d.newFindings; track f.fingerprint) {
+              <li><span class="sev sev-{{ f.severity.toLowerCase() }}">{{ f.severity }}</span> {{ f.file }}:{{ f.line }} {{ f.cwe }}</li>
+            } @empty {
+              <li class="meta">nothing new</li>
+            }
+          </ul>
+        </div>
+        <div>
+          <h3 class="fixed">Fixed ({{ d.fixedFindings.length }})</h3>
+          <ul>
+            @for (f of d.fixedFindings; track f.fingerprint) {
+              <li><span class="sev sev-{{ f.severity.toLowerCase() }}">{{ f.severity }}</span> {{ f.file }}:{{ f.line }} {{ f.cwe }}</li>
+            } @empty {
+              <li class="meta">nothing fixed</li>
+            }
+          </ul>
+        </div>
+      </div>
+    </section>
+  }
+
+  <section class="card">
+    <h2>Findings in build #{{ build.buildId }}</h2>
+    <table>
+      <thead>
+        <tr><th>Severity</th><th>Location</th><th>CWE</th><th>Rule</th><th>Found by</th><th>AI triage</th></tr>
+      </thead>
+      <tbody>
+        @for (f of build.findings; track f.fingerprint) {
+          <tr>
+            <td><span class="sev sev-{{ f.severity.toLowerCase() }}">{{ f.severity }}</span></td>
+            <td><code>{{ f.file }}:{{ f.line }}</code><div class="meta">{{ f.message }}</div></td>
+            <td>{{ f.cwe ?? '-' }}</td>
+            <td class="rule">{{ f.ruleId }}</td>
+            <td>{{ f.foundBy.join(', ') }}</td>
+            <td>
+              <span class="badge" [class.tp]="f.ai?.verdict === 'likely_tp'" [class.fp]="f.ai?.verdict === 'likely_fp'"
+                    [title]="aiTooltip(f)">{{ aiLabel(f) }}</span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+} @else if (!error() && repos().length === 0) {
+  <p class="meta">No scans yet. Send one through ingest-api.</p>
+}

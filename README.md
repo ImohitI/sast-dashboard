@@ -36,3 +36,7 @@ docker compose up -d --build                      # ui on :4200
 ```
 
 Tests: `cd dashboard-api && mvn test` (diff logic, cache HIT / MISS / Redis down).
+
+## License
+
+[Apache-2.0](LICENSE)

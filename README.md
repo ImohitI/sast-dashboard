@@ -2,6 +2,9 @@
 
 The read side of the SAST pipeline POC: `dashboard-api` (Spring Boot, Redis cache-aside) and an Angular page.
 
+> Part of a SAST pipeline built from open-source parts: [samples](https://github.com/ImohitI/samples) (vulnerable code + ground truth) → [os-sast](https://github.com/ImohitI/os-sast) (scanner CLI) → [sast-platform](https://github.com/ImohitI/sast-platform) (ingest API, Kafka, consumer, Jenkins) → **sast-dashboard** (dashboard API + UI).  
+> Design decisions: [DESIGN.md](https://github.com/ImohitI/sast-platform/blob/main/docs/DESIGN.md) · one scan followed end to end: [WALKTHROUGH.md](https://github.com/ImohitI/sast-platform/blob/main/docs/WALKTHROUGH.md)
+
 ```
 [ui :4200] ─GET /api─► [dashboard-api :8082] ─► [Redis latest:{repoId}, TTL 60 s] ── miss ──► [Postgres, read-only user]
 ```
